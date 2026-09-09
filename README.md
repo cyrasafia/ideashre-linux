@@ -28,7 +28,11 @@ packages/    官方原始 deb 安装包（作为移植基线，勿改动）
 patches/     对官方文件的补丁 / 替换脚本
 scripts/     辅助脚本（unpack.sh 解包分析等）
 arch/        PKGBUILD 等 Arch 打包文件
+docs/        设计文档（Wayland 支持方案见 docs/design-wayland-support.md）
 ```
+
+> Wayland 移植的调研结论与选定方案（LD_PRELOAD 采集桥接 → xdg-desktop-portal + PipeWire）
+> 详见 [docs/design-wayland-support.md](docs/design-wayland-support.md)。
 
 ## 快速开始（分析环境）
 
