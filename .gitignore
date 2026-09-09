@@ -1,0 +1,12 @@
+# 解包/构建产物
+unpack/
+pkg/
+src/
+*.pkg.tar.zst
+*.pkg.tar.xz
+*.log
+
+# 编辑器
+.idea/
+.vscode/
+*.swp

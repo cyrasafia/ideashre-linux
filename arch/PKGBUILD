@@ -1,0 +1,55 @@
+# 维护者: cyrasafia
+# 基于 packages/kylinOS_x86_64.deb 重打包（阶段1：X11 / XWayland 运行）
+# 构建前请将 packages/kylinOS_x86_64.deb 放置于 PKGBUILD 同级目录
+
+pkgname=ideashare
+pkgver=7.06.1.81
+pkgrel=1
+pkgdesc="Huawei IdeaShare - cast your PC screen to Huawei Vision (smart screen)"
+arch=('x86_64')
+url="https://www.huawei.com"
+license=('custom:"Copyright Huawei Technologies Co., Ltd."')
+depends=('desktop-file-utils' 'libxcb' 'libx11' 'libxext' 'libxdmcp' 'libxau' 'libgl' 'zlib' 'gcc-libs')
+optdepends=(
+    'xorg-xrandr: 反控触摸映射 (reverse_detect.sh)'
+    'xorg-xinput: 反控触摸映射 (reverse_detect.sh)'
+)
+makedepends=('binutils' 'libarchive')
+installroot=opt/apps/com.huawei.ideashare
+source=("kylinOS_x86_64.deb")
+noextract=("kylinOS_x86_64.deb")
+sha256sums=('SKIP')
+
+prepare() {
+    rm -rf _rootfs _deb
+    mkdir -p _rootfs _deb
+    (cd _deb && ar x "${srcdir}/kylinOS_x86_64.deb")
+    bsdtar -xf _deb/data.tar.xz -C _rootfs
+}
+
+package() {
+    install -d "$pkgdir/$installroot"
+    cp -a "_rootfs/$installroot/files" "$pkgdir/$installroot/"
+
+    install -Dm644 "_rootfs/$installroot/entries/icons/hicolor/scalable/apps/com.huawei.ideashare.svg" \
+        "$pkgdir/usr/share/icons/hicolor/scalable/apps/com.huawei.ideashare.svg"
+
+    sed -e 's|^Exec=.*|Exec=/usr/bin/ideashare %u|' \
+        "_rootfs/$installroot/entries/applications/com.huawei.ideashare.desktop" \
+        > "$pkgdir/usr/share/applications/ideashare.desktop"
+
+    install -Dm755 /dev/null "$pkgdir/usr/bin/ideashare"
+    cat > "$pkgdir/usr/bin/ideashare" <<'EOF'
+#!/bin/bash
+# Arch 移植包装器：使用自带 Qt 运行时，优先原生平台，回退 XWayland
+IDEASHARE_HOME=/opt/apps/com.huawei.ideashare/files
+export QT_PLUGIN_PATH="$IDEASHARE_HOME/lib"
+if [[ "${XDG_SESSION_TYPE:-}" == wayland && -f "$IDEASHARE_HOME/lib/platforms/libqwayland.so" ]]; then
+    export QT_QPA_PLATFORM=wayland
+else
+    export QT_QPA_PLATFORM=xcb
+fi
+cd "$IDEASHARE_HOME/lib" || exit 1
+exec "$IDEASHARE_HOME/bin/IdeaShare" "$@"
+EOF
+}
