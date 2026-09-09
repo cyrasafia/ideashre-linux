@@ -43,7 +43,9 @@ ls unpack/kylin/data/opt/apps/com.huawei.ideashare/files/bin/
 
 ## 路线图
 
-- [ ] **阶段 0**：解包分析（采集/编码/反控链路、动态库依赖清单）
+> 当前范围: **仅投屏**；反控（键鼠/触摸回传）为低优先级，暂缓实施（详见设计文档 §7 Backlog）
+
+- [ ] **阶段 0**：解包分析（采集/编码链路、动态库依赖清单）
 - [ ] **阶段 1**：Arch 打包（PKGBUILD 重打包，X11 会话下可用）
 - [ ] **阶段 2**：Wayland 兼容运行（XWayland 下运行 xcb 插件，验证投屏与反控）
 - [ ] **阶段 3**：原生 Wayland 支持（patch 启动脚本按 `XDG_SESSION_TYPE` 选择平台插件；为自带 Qt 5.15.17 编译 `qtwayland`；评估屏幕采集替换为 PipeWire/XDG-Desktop-Portal 的可行性）
@@ -52,7 +54,7 @@ ls unpack/kylin/data/opt/apps/com.huawei.ideashare/files/bin/
 
 - 主程序为闭源二进制且链接 `Qt5X11Extras`，原生 Wayland 窗口可能需依赖 Qt 的 xcb 兼容层或二进制 patch
 - 官方包捆绑全部依赖（205 个 so），与 Arch 系统库混用时需注意符号冲突，打包时优先使用自带库
-- 反控（触摸/键鼠回传）在 Wayland 下受输入权限限制，可能需要额外方案
+- 反控（触摸/键鼠回传）在 Wayland 下受输入权限限制，可能需要额外方案（低优先级，暂缓）
 
 ## 声明
 

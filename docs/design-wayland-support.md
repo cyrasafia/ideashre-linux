@@ -4,11 +4,12 @@
 - 日期: 2026-09-09
 - 目标环境: Arch Linux + GNOME 50 (Wayland only)
 - 调研基线: packages/kylinOS_x86_64.deb (7.06.1.81)
+- **范围: 仅投屏**。反控（键鼠/触摸回传）标记为低优先级，暂缓实施（见 §7 Backlog）
 
 ## 1. 背景
 
 IdeaShare 官方 Linux 版仅提供麒麟/UOS 的 deb 包，且仅支持 X11 会话。本项目目标是在
-Arch + GNOME Wayland 环境下完整可用（投屏 + 反控）。
+Arch + GNOME Wayland 环境下实现**投屏**可用；反控暂不在当前范围内。
 
 ## 2. 环境调研结论: GNOME 50 与 XWayland
 
@@ -53,7 +54,7 @@ U XInitThreads
 `libideashare_data_projection_client.so` 用 `XGetInputFocus/XGetWindowAttributes/XGetWMName`
 检测活动窗口。
 
-### 3.3 反控（输入回传）链路
+### 3.3 反控（输入回传）链路（低优先级，暂缓）
 
 - `bin/IdeaShareRvrsCtl` 与 `libidea_os_shmem.so` 引用 **uinput**: 虚拟触摸/键鼠设备走内核
   uinput（evdev 级），**与显示服务器无关，Wayland 下天然可用**
@@ -119,7 +120,7 @@ IdeaShare(vlink)                bridge(.so LD_PRELOAD)              GNOME 50
 - 帧率: vlink 为轮询式（无 XDamage），XShmGetImage 调用频率即投屏帧率，桥接层以
   "最新帧快照" 语义响应，天然合拍
 
-### 5.4 反控修复
+### 5.4 反控修复（低优先级，暂缓，仅存档）
 
 1. patch `reverse_detect.sh`: 移除 x11 会话检查；Wayland 下跳过或替换
    `xinput map-to-output`（单显示器场景无需映射，多显示器首版从简）
@@ -140,10 +141,19 @@ IdeaShare(vlink)                bridge(.so LD_PRELOAD)              GNOME 50
 | M2 | bridge 骨架: 拦截+透传+日志 | LD_PRELOAD 后 UI/显示器枚举不回归 |
 | M3 | XShmGetImage ← PipeWire 打通 | 整屏投屏包含 Wayland 原生窗口内容 |
 | M4 | XGetImage 回退路径 + 光标合成 | 光标可见、格式正确 |
-| M5 | reverse_detect patch + 多显示器 | 反控触摸在 Wayland 会话可用 |
+| M5 | 多显示器/分数缩放适配（monitor scale 换算、选屏） | 多显示器下选屏与画面正确 |
 | M6 | 打包集成 + README 更新 | makepkg 安装后开箱即用 |
 
-## 7. 风险与开放问题
+## 7. Backlog（低优先级，暂缓）
+
+- 反控全链路（原 M5 内容，待投屏稳定后再评估）:
+  1. patch `reverse_detect.sh`: 移除 x11 会话检查；Wayland 下跳过或替换
+     `xinput map-to-output`（单显示器场景无需映射，多显示器从简）
+  2. uinput 注入链路保持不动（已验证与显示服务器无关）
+  3. 如 Wayland 合成器后续限制 uinput（如孤立输入），再评估 libei + portal RemoteDesktop
+- 阶段 B（qtwayland 原生窗口）评估
+
+## 8. 风险与开放问题
 
 - **闭源二进制**: vlink 内部可能按 display/visual 假设处理 XImage（如依赖
   DisplayWidth/screen 结构），bridge 需保证返回结构自洽
@@ -155,7 +165,7 @@ IdeaShare(vlink)                bridge(.so LD_PRELOAD)              GNOME 50
 - **UOS 包差异**: 本设计基于麒麟包; UOS 包 (7.06.1.03) 未做同等符号级核对，移植时需复验
 - **Qt5X11Extras 硬链**: 若后续走方案 B（原生 wayland 插件）需处理 X11 依赖，暂缓
 
-## 8. 参考
+## 9. 参考
 
 - GNOME X11 Session Removal FAQ — blogs.gnome.org/alatiera (2025-06)
 - GNOME 50 发布报道（X11 会话移除、XWayland 保留）— ghacks.net (2026-03-20)
